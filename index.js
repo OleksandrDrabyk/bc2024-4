@@ -27,7 +27,14 @@ if (req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'image/jpeg' });
     res.end(fileContent);
 
-  }
+  }else if (req.method === 'PUT') {
+    const fileContent = [];
+    req.on('data', chunk => fileContent.push(chunk));
+    req.on('end', async () => {
+      await fsPromises.writeFile(cacheFilePath, Buffer.concat(fileContent));
+      res.writeHead(201, { 'Content-Type': 'text/plain' });
+      res.end('Created');
+    });
 server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено за адресою http://${options.host}:${options.port}/`);
 });

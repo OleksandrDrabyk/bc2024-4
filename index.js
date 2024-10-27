@@ -35,6 +35,11 @@ if (req.method === 'GET') {
       res.writeHead(201, { 'Content-Type': 'text/plain' });
       res.end('Created');
     });
+}else if (req.method === 'DELETE') {
+    await fsPromises.unlink(cacheFilePath);
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Deleted');
+  }
 server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено за адресою http://${options.host}:${options.port}/`);
 });

@@ -5,24 +5,39 @@ const superagent = require('superagent');
 const { program } = require('commander');
 
 
+
+program.configureOutput({
+  writeErr: (str) => {
+    if (str.includes("option '-c, --cache <cache>' argument missing")) {
+      console.error('Error: Cache directory is required. Please specify --cache.');
+    } else if (str.includes("option '-h, --host <host>' argument missing")) {
+      console.error('Error: Server address is required. Please specify --host.');
+    } else if (str.includes("option '-p, --port <port>' argument missing")) {
+      console.error('Error: Server port is required. Please specify --port.');
+    } else {
+      console.error(str);
+    }
+  }
+});
+
 program
   .requiredOption('-h, --host <host>', 'server address')
   .requiredOption('-p, --port <port>', 'server port')
   .requiredOption('-c, --cache <cache>', 'cache directory')
   .parse();
 
-const { host, port, cache } = program.opts();
+const { host, port, cache } = program.opts(); // Отримуємо параметри з командного рядка
 const fsPromises = fs.promises;
 
 
-if (!options.host || !options.port || !options.cache) {
-  console.error("Помилка: не задано обов'язковий параметр.");
-  console.error("Будь ласка, вкажіть усі обов'язкові параметри: --host, --port, --cache.");
+if (!host || !port || !cache) {
+  console.error("Error: One or more required parameters are missing.");
   process.exit(1);
 }
 
 
 fsPromises.mkdir(cache, { recursive: true }).catch(console.error);
+
 
 const server = http.createServer(async (req, res) => {
   const urlPath = req.url.slice(1); 
@@ -30,12 +45,10 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (req.method === 'GET') {
-      
       const fileContent = await fsPromises.readFile(cacheFilePath);
       res.writeHead(200, { 'Content-Type': 'image/jpeg' });
       res.end(fileContent);
-    } 
-    else if (req.method === 'PUT') {
+    } else if (req.method === 'PUT') {
       const fileContent = [];
       req.on('data', chunk => fileContent.push(chunk));
       req.on('end', async () => {
@@ -43,13 +56,11 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(201, { 'Content-Type': 'text/plain' });
         res.end('Created');
       });
-    } 
-    else if (req.method === 'DELETE') {
+    } else if (req.method === 'DELETE') {
       await fsPromises.unlink(cacheFilePath);
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end('Deleted');
-    } 
-    else {
+    } else {
       res.writeHead(405, { 'Content-Type': 'text/plain' });
       res.end('Method Not Allowed');
     }
@@ -70,7 +81,6 @@ const server = http.createServer(async (req, res) => {
     }
   }
 });
-
 server.listen(port, host, () => {
   console.log(`Server running at http://${host}:${port}/`);
 });
